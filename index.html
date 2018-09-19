@@ -1,0 +1,62 @@
+<html>
+<head>
+  <title>[test sproto ]</title>
+  <script type="text/javascript" src="./Sproto.js"></script>
+</head>
+<body>
+  <script>
+
+var c2s
+var s2c
+function init_sproto(map){
+	console.log("init_sproto")
+    s2c = Sproto.new(map['./s2c.sp']);
+    c2s = Sproto.new(map['./c2s.sp']);
+    c2s.host("package");
+    host = s2c.host("package");
+    request = host.attach(c2s);
+	
+	session = session + 1;
+    var p = request("handshake", null, session).buf;
+    var d = array2arraybuffer(p);
+	socket.send(d)
+}
+
+function getSpFiles(filenames,cb){
+    function getFile(filename,callback){
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', filename, true);
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = function(e) {
+            var buff = xhr.response;
+            var dataview = new DataView(buff);
+            var schema = new Array();
+            for (var i = 0; i < dataview.byteLength; i++) {
+                schema[i] = dataview.getUint8(i);
+            }
+            //alert(dataview.byteLength);
+            callback(filename,{buf:schema, sz:schema.length});
+
+        };
+        xhr.send();
+    }
+
+    for(i = 0;i < filenames.length;i++){
+        getFile(filenames[i],cb)
+    }
+}
+
+getSpFiles(['./c2s.sp','./s2c.sp'],loaded_callbac);
+var loadedMap = {len : 0};
+function loaded_callbac(filename,data) {
+    loadedMap.len ++;
+    var obj = {}
+    loadedMap[filename] = data
+    if(loadedMap.len == 2 ){
+        init_sproto(loadedMap);
+    }
+}
+  </script>
+</body>
+</html>

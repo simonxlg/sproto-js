@@ -1,0 +1,18 @@
+update_userinfo 1 {
+	request {
+		diff 0 : string
+	}
+}
+
+push 2 {
+	request {
+		text 0 : string
+	}
+}
+
+sence_event 3 {
+	request {
+		type 0 : integer
+		data 1 : string
+	}
+}

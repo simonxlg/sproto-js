@@ -1,0 +1,51 @@
+auth 1001 {
+	request {
+		token 0 : string
+		uid 1 : string
+	}
+	response {
+		ret 0 : string
+	}
+}
+
+login 1002 {
+	response {
+		ok 0 : boolean
+		now_path 1 : string	
+		user_info 2 : UserInfo
+	}
+}
+
+logout 1003 {
+	response {
+		ok 0 : boolean
+	}
+}
+
+signup 1004 {
+	request {
+		uid 0 : string
+	}
+	response {
+		ok 0 : boolean
+	}
+}
+
+enter_scene 2001 {
+	request {
+		id 0 : integer 
+	}
+	response {
+		ok 0 : boolean
+	}
+}
+
+scene_ping 2002 {}
+
+leave 2003 {
+	response {
+		ok 0 : boolean
+	}
+}
+heartbeat  9000 {}
+ping 9001 {}

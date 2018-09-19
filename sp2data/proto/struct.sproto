@@ -1,0 +1,14 @@
+.package {
+	type 0 : integer
+	session 1 : integer
+	ud 2 : string
+}
+
+.UserInfo {
+	uid 0 : string
+	name 1 : string
+	money 2 : integer
+	online_time 3 : integer
+	login_count 4 : integer
+	last_login_time 5 : integer
+}
