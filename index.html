@@ -5,9 +5,30 @@
 </head>
 <body>
   <script>
+function arr2ab(array) {
+    var len = array.length;
+    var b = new ArrayBuffer(len + 2);
+    var v = new DataView(b, 0);
+    v.setUint16(0,len);
+    for (var i = 0; i < array.length; i++) {
+        v.setUint8(i + 2, array[i]);
+    }
+    return b;
+}
+
+function ab2arr(buffer) {
+    var v = new DataView(buffer, 0);
+    var a = new Array();
+    var len = v.getUint16(0);
+    for (var i = 0; i < len; i++) {
+        a[i] = v.getUint8(i+2);
+    }
+    return a;
+}
 
 var c2s
 var s2c
+var session
 function init_sproto(map){
 	console.log("init_sproto")
     s2c = Sproto.new(map['./s2c.sp']);
@@ -18,8 +39,8 @@ function init_sproto(map){
 	
 	session = session + 1;
     var p = request("handshake", null, session).buf;
-    var d = array2arraybuffer(p);
-	socket.send(d)
+    var d = arr2ab(p);
+	//socket.send(d)
 }
 
 function getSpFiles(filenames,cb){
