@@ -4,64 +4,11 @@
 //=================================================================
 var Sproto = {
     new: function(data) {
-        function encodeUTF8(str) {
-          var _str = ""
-          for(var i = 0; i < str.length; i++) {
-            var temp = str.charCodeAt(i)
-            if(temp < 128) {
-                _str += String.fromCharCode(temp)
-            }
-            else if(temp < 2048) {
-              _str += String.fromCharCode((temp >> 6) | 192);
-              _str += String.fromCharCode((temp & 63) | 128);
-            }
-            else if(temp < 65536) {
-              _str += String.fromCharCode((temp >> 12) | 224);
-              _str += String.fromCharCode(((temp >> 6) & 63) | 128);
-              _str += String.fromCharCode((temp & 63) | 128);
-            }
-            else {
-              _str += String.fromCharCode((temp >> 18) | 240);
-              _str += String.fromCharCode(((temp >> 12) & 63) | 128);
-              _str += String.fromCharCode(((temp >> 6) & 63) | 128);
-              _str += String.fromCharCode((temp & 63) | 128);
-            }
-          }
-          return _str;
-        }
-
-        function utf8Decode(str) {
-          var _str = "";
-          var c1, c2, c3, c4;
-          for(var i = 0; i < str.length; i++) {
-            c1 = str.charCodeAt(i);
-            if(c1 < 128) {
-              _str += String.fromCharCode(c1);
-            }
-            else if(c1 < 224) {
-              c2 = str.charCodeAt(++i);
-              _str += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-            }
-            else if(c1 < 240) {
-              c2 = str.charCodeAt(++i);
-              c3 = str.charCodeAt(++i);
-              _str += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-            }
-            else {
-              c2 = str.charCodeAt(++i);
-              c3 = str.charCodeAt(++i);
-              c4 = str.charCodeAt(++i);
-              _str += String.fromCharCode(((c1 & 7) << 18) | ((c2 & 63) << 12) |((c3 & 63) << 6) | (c2 & 63));
-            }
-          }
-          return _str;
-        }
-
         function hexArr64ToNum(arr){
             var herArr = arr.slice(0,8);
             return hexArrToNum(herArr);
         }
-        
+		
         function numToHexArr64(num){
             var herArr = numToHexArr(num);
             var arr = [];
@@ -101,15 +48,15 @@ var Sproto = {
             }
             return {buf:b, sz:a1.sz + a2.sz};
         }
-        
+		
         function toword(stream) {
-            return v = (stream[0] & 0xff) | (stream[1] & 0xff) << 8;
+            return (stream[0] & 0xff) | (stream[1] & 0xff) << 8;
         }
-        
+		
         function todword(stream) {
             return (stream[0] & 0xff) | (stream[1] & 0xff) << 8 | (stream[2] & 0xff) << 16 | (stream[3] & 0xff) << 24;
         }
-        
+		
         function count_array(stream) {
             var length = todword(stream);
             var n = 0;
@@ -130,7 +77,7 @@ var Sproto = {
             }
             return n;
         }
-        
+		
         function struct_field(stream, sz) {
             var field, fn, header, i;
             if (sz < 4) {
@@ -162,16 +109,16 @@ var Sproto = {
             }
             return fn;
         }
-        
+		
         function import_string(stream) {
             var str = "";
-            arr = stream.slice(4, 4 + todword(stream));
+            var arr = stream.slice(4, 4 + todword(stream));
             for (var i = 0; i < arr.length; i++) {
                 str += String.fromCharCode(arr[i]);
             }
             return str;
         }
-        
+		
         function import_field(f, stream) {
             var sz, result, fn, i;
             var array = 0;
@@ -243,7 +190,7 @@ var Sproto = {
             f.type |= array;
             return result;
         }
-        
+		
         function import_type(t, stream) {
             var result, i, fn, n, maxn, last;
             var sz = todword(stream);
@@ -299,7 +246,7 @@ var Sproto = {
             }
             return result;
         }
-        
+		
         function import_protocol(p, stream) {
             var result, sz, fn, i, tag;
             sz = todword(stream);
@@ -354,12 +301,12 @@ var Sproto = {
             }
             return result;
         }
-        
-        var sproto = {};
+		
+		var sproto = {};
         var result = {};
         var __session = [];
         var __buf;
-        
+		
         function create(stream, sz) {
             var content, typedata, protocoldata;
             var fn = struct_field(stream, sz);
@@ -437,17 +384,16 @@ var Sproto = {
             var sz = todword(stream);
             var type = args.type;
             var i;
-            stream = stream.slice(4);
+            if (sz == 0) {
+                args.index = 1;
+                args.length = 0;
+                cb(args);
+                return 0;
+            }
+             stream = stream.slice(4);
             switch (type) {
             case 0: {
                 var len;
-                if (sz == 0) {
-                    args.index = -1;
-                    args.value = [];
-                    args.length = 0;
-                    cb(args);
-                    return 0;
-                }
                 len = stream[0];
                 stream = stream.slice(1);
                 --sz;
@@ -575,7 +521,7 @@ var Sproto = {
             }
             return null;
         }
-        
+		
         function sproto_decode(st, data, size, cb, ud) {
             var args = new Object();
             var total = size;
@@ -702,6 +648,10 @@ var Sproto = {
                 if (args.tagname != self.array_tag) {
                     self.array_tag = args.tagname;
                     self.result[args.tagname] = new Array();
+                    if (args.length == 0)
+                    {
+                        return 0
+                    }
                 }
             }
             switch (args.type) {
@@ -714,7 +664,7 @@ var Sproto = {
                 for (var i = 0; i < args.length; i++) {
                     value += String.fromCharCode(args.value[i]);
                 }
-                value = utf8Decode(value)
+                value = utf8.decode(value)
                 break;
             case 3:
                 var sub, r;
@@ -732,7 +682,9 @@ var Sproto = {
                 console.log("invalid type");
             }
             if (args.index > 0) {
-                self.result[args.tagname][args.index-1] = value;
+                if(value != null){
+                    self.result[args.tagname][args.index-1] = value;
+                }
             } else {
                 self.result[args.tagname] = value;
             }
@@ -780,9 +732,6 @@ var Sproto = {
                 sz = cb(args);
                 if (sz <= 0) {
                     return sz;
-                }
-                if (args.type == 2) {
-                    --sz;
                 }
                 return fill_size(data_idx, sz);
             }
@@ -1013,11 +962,11 @@ var Sproto = {
                 } else {
                     str = self.indata[args.tagname][args.index-1];
                 }
-                str = encodeUTF8(str)
+                str = utf8.encode(str)
                 for (var i = 0; i < str.length; i++) {
                     __buf[args.value + i] = str.charCodeAt(i);
                 }
-                return str.length + 1;
+                return str.length;
             case 3:
                 var sub = new Object();
                 var r;
@@ -1107,11 +1056,12 @@ var Sproto = {
             var src_idx = 0;
             var buffer_idx = 0;
             var bufsz = 1<<30;
+
             function write_ff(src, des_idx, nn) {
                 var i;
                 var align8_n = (nn + 7) & (~7);
                 buffer[des_idx] = 0xff;
-                buffer[des_idx + 1] = align8_n / 8 -1;
+                buffer[des_idx + 1] = Math.floor(align8_n / 8) - 1;
                 for (i = 0; i < nn; i++) {
                     buffer[des_idx + 2 + i] = src[i];
                 }
@@ -1198,12 +1148,19 @@ var Sproto = {
                 buffer_idx += n;
                 size += n;
             }
+
             if (bufsz >= 0) {
                 if (ff_n == 1) {
                     write_ff(ff_srcstart, ff_desstart, 8);
                 } else if (ff_n > 1) {
                     write_ff(ff_srcstart, ff_desstart, srcsz - ff_srcstart_idx);
                 }
+
+            if (buffer.length > size) {
+                for (var i = size; i < buffer.length; i++) {
+                    buffer[i] = 0;
+                }
+            }
             }
             return {buf: buffer, sz:size};
         }
@@ -1375,25 +1332,4 @@ var Sproto = {
         
         return create(data.buf, data.sz);
     }
-}
-
-function arr2ab(array) {
-    var len = array.length;
-    var b = new ArrayBuffer(len + 2);
-    var v = new DataView(b, 0);
-    v.setUint16(0,len);
-    for (var i = 0; i < array.length; i++) {
-        v.setUint8(i + 2, array[i]);
-    }
-    return b;
-}
-
-function ab2arr(buffer) {
-    var v = new DataView(buffer, 0);
-    var a = new Array();
-    var len = v.getUint16(0);
-    for (var i = 0; i < len; i++) {
-        a[i] = v.getUint8(i+2);
-    }
-    return a;
 }
